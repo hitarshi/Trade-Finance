@@ -82,37 +82,22 @@ func main() {
 // Init - reset all the things
 // ============================================================================================================================
 func (t *CreatePO) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
-	var po PO
+	var msg string
 	//var PO_list allPO
 
 	var err error
 
-	if len(args) != 9 {
-		return nil, errors.New("Incorrect number of arguments. Expecting 9")
-	}
 	// Initialize the chaincode
-	po.transID = args[0]
-	po.sellerName = args[1]
-	po.buyerName = args[2]
-	po.ExpectedDeliveryDate = args[3]
-	po.PO_status = args[4]
-	po.PO_date = args[5]
-	po.items[0].ID = args[6]
-	po.items[0].Name = args[7]
-	po.items[0].Quantity, err = strconv.Atoi(args[8])
-	if err != nil {
-		return nil, errors.New("Expecting integer value for asset holding")
-	}
+	
+	msg = args[0]
+	fmt.Println("ManagePO chaincode is deployed with the message : "+ msg);
 	/*Aval, err = strconv.Atoi(args[0])
 	if err != nil {
 		return nil, errors.New("Expecting integer value for asset holding")
 	}*/
 
 	// Write the state to the ledger
-	err = stub.PutState("_POindex", []byte(po.transID))			//making a test var "abc", I find it handy to read/write to it right away to test the network
-	if err != nil {
-		return nil, err
-	}
+	
 	
 	var empty []string
 	jsonAsBytes, _ := json.Marshal(empty)								//marshal an emtpy array of strings to clear the index
@@ -148,13 +133,13 @@ func (t *CreatePO) Invoke(stub shim.ChaincodeStubInterface, function string, arg
 	// Handle different functions
 	if function == "init" {													//initialize the chaincode state, used as reset
 		return t.Init(stub, "init", args)
-	} else if function == "displayPO" {										//deletes an entity from its state
-		return t.displayPO(stub, args)
+	//} else if function == "display_po" {										//deletes an entity from its state
+		//return t.display_po(stub, args)
 		//cleanTrades(stub)													//lets make sure all open trades are still valid
 		//return res, err
-	} /*else if function == "updatePO" {											//writes a value to the chaincode state
-		return t.updatePO(stub, args)
-	}*//* else if function == "read" {									//create a new marble
+	} else if function == "create_po" {											//writes a value to the chaincode state
+		return t.create_po(stub, args)
+	}/* else if function == "read" {									//create a new marble
 		return t.init_marble(stub, args)
 	} else if function == "set_user" {										//change owner of a marble
 		res, err := t.set_user(stub, args)
@@ -181,8 +166,8 @@ func (t *CreatePO) Query(stub shim.ChaincodeStubInterface, function string, args
 	fmt.Println("query is running " + function)
 
 	// Handle different functions
-	if function == "displayPO" {													//read a variable
-		return t.displayPO(stub, args)
+	if function == "display_po" {													//read a variable
+		return t.display_po(stub, args)
 	}
 	fmt.Println("query did not find func: " + function)						//error
 
@@ -190,20 +175,20 @@ func (t *CreatePO) Query(stub shim.ChaincodeStubInterface, function string, args
 }
 
 // ============================================================================================================================
-// Read - read a variable from chaincode state
+// display_po - display PO details for a specific ID from chaincode state
 // ============================================================================================================================
-func (t *CreatePO) displayPO(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
-	var ID, jsonResp string
+func (t *CreatePO) display_po(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	var transID, jsonResp string
 	var err error
 
 	if len(args) != 1 {
 		return nil, errors.New("Incorrect number of arguments. Expecting ID of the var to query")
 	}
 
-	ID = args[0]
-	valAsbytes, err := stub.GetState(ID)									//get the var from chaincode state
+	transID = args[0]
+	valAsbytes, err := stub.GetState(transID)									//get the var from chaincode state
 	if err != nil {
-		jsonResp = "{\"Error\":\"Failed to get state for " + ID + "\"}"
+		jsonResp = "{\"Error\":\"Failed to get state for " + transID + "\"}"
 		return nil, errors.New(jsonResp)
 	}
 
@@ -248,7 +233,7 @@ func (t *CreatePO) displayPO(stub shim.ChaincodeStubInterface, args []string) ([
 	err = stub.PutState(POIndexStr, jsonAsBytes)
 	return nil, nil
 }
-*/
+
 // ============================================================================================================================
 // Write - write variable into chaincode state
 // ============================================================================================================================
@@ -271,19 +256,18 @@ func (t *CreatePO) displayPO(stub shim.ChaincodeStubInterface, args []string) ([
 }*/
 
 // ============================================================================================================================
-// Init Marble - create a new marble, store into chaincode state
+// Init PO - create a new PO, store into chaincode state
 // ============================================================================================================================
-/*func (t *CreatePO) init_marble(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+func (t *CreatePO) create_po(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var err error
-
+	var po PO
 	//   0       1       2     3
 	// "asdf", "blue", "35", "bob"
-	if len(args) != 4 {
-		return nil, errors.New("Incorrect number of arguments. Expecting 4")
+	if len(args) != 9 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 9")
 	}
-
 	//input sanitation
-	fmt.Println("- start init marble")
+	fmt.Println("- start create_po")
 	if len(args[0]) <= 0 {
 		return nil, errors.New("1st argument must be a non-empty string")
 	}
@@ -296,54 +280,83 @@ func (t *CreatePO) displayPO(stub shim.ChaincodeStubInterface, args []string) ([
 	if len(args[3]) <= 0 {
 		return nil, errors.New("4th argument must be a non-empty string")
 	}
-	name := args[0]
-	color := strings.ToLower(args[1])
-	user := strings.ToLower(args[3])
-	size, err := strconv.Atoi(args[2])
-	if err != nil {
-		return nil, errors.New("3rd argument must be a numeric string")
+	if len(args[4]) <= 0 {
+		return nil, errors.New("5th argument must be a non-empty string")
 	}
-
-	//check if marble already exists
-	marbleAsBytes, err := stub.GetState(name)
-	if err != nil {
-		return nil, errors.New("Failed to get marble name")
+	if len(args[5]) <= 0 {
+		return nil, errors.New("6th argument must be a non-empty string")
 	}
-	res := Marble{}
-	json.Unmarshal(marbleAsBytes, &res)
-	if res.Name == name{
-		fmt.Println("This marble arleady exists: " + name)
-		fmt.Println(res);
-		return nil, errors.New("This marble arleady exists")				//all stop a marble by this name exists
+	if len(args[6]) <= 0 {
+		return nil, errors.New("7th argument must be a non-empty string")
+	}
+	if len(args[7]) <= 0 {
+		return nil, errors.New("8th argument must be a non-empty string")
+	}
+	if len(args[8]) <= 0 {
+		return nil, errors.New("9th argument must be a non-empty string")
+	}
+	po.transID = args[0]
+	po.sellerName = args[1]
+	po.buyerName = args[2]
+	po.ExpectedDeliveryDate = args[3]
+	po.PO_status = args[4]
+	po.PO_date = args[5]
+	po.items[0].ID = args[6]
+	po.items[0].Name = args[7]
+	po.items[0].Quantity, err = strconv.Atoi(args[8])
+	if err != nil {
+		return nil, errors.New("Expecting integer value for asset holding")
 	}
 	
-	//build the marble json string manually
-	str := `{"name": "` + name + `", "color": "` + color + `", "size": ` + strconv.Itoa(size) + `, "user": "` + user + `"}`
-	err = stub.PutState(name, []byte(str))									//store marble with id as key
+	poAsBytes, err := stub.GetState(po.transID)
+	if err != nil {
+		return nil, errors.New("Failed to get PO transID")
+	}
+	res := PO{}
+	json.Unmarshal(poAsBytes, &res)
+	if res.transID == po.transID{
+		fmt.Println("This PO arleady exists: " + po.transID)
+		fmt.Println(res);
+		return nil, errors.New("This PO arleady exists")				//all stop a marble by this name exists
+	}
+	
+	//build the PO json string manually
+	order := 	`{`+
+			`"transId": "` + po.transID + `" , `+
+			`"sellerName": "` + po.sellerName + `" , `+
+			`"buyerName": "` + po.buyerName + `" , `+
+			`"ExpectedDeliveryDate": "` + po.ExpectedDeliveryDate + `" , `+ 
+			`"PO_status": "` + po.PO_status + `" , `+ 
+			`"PO_date": "` + po.PO_date + `" , `+ 
+			`"id": "` + po.items[0].ID + `" , `+ 
+			`"name": "` + po.items[0].Name + `" , `+ 
+			`"quantity": "` +  strconv.Itoa(po.items[0].Quantity) + `" `+ 
+			`}`
+	err = stub.PutState(po.transID, []byte(order))									//store PO with id as key
 	if err != nil {
 		return nil, err
 	}
 		
-	//get the marble index
-	marblesAsBytes, err := stub.GetState(POIndexStr)
+	//get the PO index
+	poIndexAsBytes, err := stub.GetState(POIndexStr)
 	if err != nil {
-		return nil, errors.New("Failed to get marble index")
+		return nil, errors.New("Failed to get PO index")
 	}
-	var marbleIndex []string
-	json.Unmarshal(marblesAsBytes, &marbleIndex)							//un stringify it aka JSON.parse()
+	var poIndex []string
+	json.Unmarshal(poIndexAsBytes, &poIndex)							//un stringify it aka JSON.parse()
 	
 	//append
-	marbleIndex = append(marbleIndex, name)									//add marble name to index list
-	fmt.Println("! marble index: ", marbleIndex)
-	jsonAsBytes, _ := json.Marshal(marbleIndex)
-	err = stub.PutState(POIndexStr, jsonAsBytes)						//store name of marble
+	poIndex = append(poIndex, po.transID)									//add PO transID to index list
+	fmt.Println("! PO index: ", poIndex)
+	jsonAsBytes, _ := json.Marshal(poIndex)
+	err = stub.PutState(POIndexStr, jsonAsBytes)						//store name of PO
 
-	fmt.Println("- end init marble")
+	fmt.Println("- end create PO")
 	return nil, nil
-}*/
+}
 
 // ============================================================================================================================
-// Set User Permission on Marble
+// Set User Permission on PO
 // ============================================================================================================================
 /*func (t *CreatePO) set_user(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var err error
