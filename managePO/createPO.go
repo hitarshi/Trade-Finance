@@ -30,8 +30,8 @@ import (
 	"github.com/hyperledger/fabric/core/chaincode/shim"
 )
 
-// CreatePO example simple Chaincode implementation
-type CreatePO struct {
+// SimpleChaincode example simple Chaincode implementation
+type SimpleChaincode struct {
 }
 
 var POIndexStr = "_POindex"				//name for the key/value that will store a list of all known marbles
@@ -72,7 +72,7 @@ type AllTrades struct{
 // Main
 // ============================================================================================================================
 func main() {
-	err := shim.Start(new(CreatePO))
+	err := shim.Start(new(SimpleChaincode))
 	if err != nil {
 		fmt.Printf("Error starting Simple chaincode: %s", err)
 	}
@@ -81,7 +81,7 @@ func main() {
 // ============================================================================================================================
 // Init - reset all the things
 // ============================================================================================================================
-func (t *CreatePO) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
+func (t *SimpleChaincode) Init(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	var msg string
 	//var PO_list allPO
 
@@ -119,7 +119,7 @@ func (t *CreatePO) Init(stub shim.ChaincodeStubInterface, function string, args 
 // ============================================================================================================================
 // Run - Our entry point for Invocations - [LEGACY] obc-peer 4/25/2016
 // ============================================================================================================================
-func (t *CreatePO) Run(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
+func (t *SimpleChaincode) Run(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Println("run is running " + function)
 	return t.Invoke(stub, function, args)
 }
@@ -127,7 +127,7 @@ func (t *CreatePO) Run(stub shim.ChaincodeStubInterface, function string, args [
 // ============================================================================================================================
 // Invoke - Our entry point for Invocations
 // ============================================================================================================================
-func (t *CreatePO) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
+func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Println("invoke is running " + function)
 
 	// Handle different functions
@@ -162,7 +162,7 @@ func (t *CreatePO) Invoke(stub shim.ChaincodeStubInterface, function string, arg
 // ============================================================================================================================
 // Query - Our entry point for Queries
 // ============================================================================================================================
-func (t *CreatePO) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
+func (t *SimpleChaincode) Query(stub shim.ChaincodeStubInterface, function string, args []string) ([]byte, error) {
 	fmt.Println("query is running " + function)
 
 	// Handle different functions
@@ -177,7 +177,7 @@ func (t *CreatePO) Query(stub shim.ChaincodeStubInterface, function string, args
 // ============================================================================================================================
 // display_po - display PO details for a specific ID from chaincode state
 // ============================================================================================================================
-func (t *CreatePO) display_po(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+func (t *SimpleChaincode) display_po(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var transID, jsonResp string
 	var err error
 
@@ -198,7 +198,7 @@ func (t *CreatePO) display_po(stub shim.ChaincodeStubInterface, args []string) (
 // ============================================================================================================================
 // Delete - remove a key/value pair from state
 // ============================================================================================================================
-/*func (t *CreatePO) Delete(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+/*func (t *SimpleChaincode) Delete(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	if len(args) != 1 {
 		return nil, errors.New("Incorrect number of arguments. Expecting 1")
 	}
@@ -237,7 +237,7 @@ func (t *CreatePO) display_po(stub shim.ChaincodeStubInterface, args []string) (
 // ============================================================================================================================
 // Write - write variable into chaincode state
 // ============================================================================================================================
-/*func (t *CreatePO) updatePO(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+/*func (t *SimpleChaincode) updatePO(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var name, value string // Entities
 	var err error
 	fmt.Println("running write()")
@@ -258,7 +258,7 @@ func (t *CreatePO) display_po(stub shim.ChaincodeStubInterface, args []string) (
 // ============================================================================================================================
 // Init PO - create a new PO, store into chaincode state
 // ============================================================================================================================
-func (t *CreatePO) create_po(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+func (t *SimpleChaincode) create_po(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var err error
 	var po PO
 	//   0       1       2     3
@@ -358,7 +358,7 @@ func (t *CreatePO) create_po(stub shim.ChaincodeStubInterface, args []string) ([
 // ============================================================================================================================
 // Set User Permission on PO
 // ============================================================================================================================
-/*func (t *CreatePO) set_user(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+/*func (t *SimpleChaincode) set_user(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var err error
 	
 	//   0       1
@@ -390,7 +390,7 @@ func (t *CreatePO) create_po(stub shim.ChaincodeStubInterface, args []string) ([
 // ============================================================================================================================
 // Open Trade - create an open trade for a marble you want with marbles you have 
 // ============================================================================================================================
-/*func (t *CreatePO) open_trade(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+/*func (t *SimpleChaincode) open_trade(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var err error
 	var will_size int
 	var trade_away Description
@@ -460,7 +460,7 @@ func (t *CreatePO) create_po(stub shim.ChaincodeStubInterface, args []string) ([
 // ============================================================================================================================
 // Perform Trade - close an open trade and move ownership
 // ============================================================================================================================
-/*func (t *CreatePO) perform_trade(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+/*func (t *SimpleChaincode) perform_trade(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var err error
 	
 	//	0		1					2					3				4					5
@@ -577,7 +577,7 @@ func (t *CreatePO) create_po(stub shim.ChaincodeStubInterface, args []string) ([
 // ============================================================================================================================
 // Remove Open Trade - close an open trade
 // ============================================================================================================================
-/*func (t *CreatePO) remove_trade(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+/*func (t *SimpleChaincode) remove_trade(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var err error
 	
 	//	0
