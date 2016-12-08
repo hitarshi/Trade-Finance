@@ -60,6 +60,19 @@ type AllTrades struct{
 	OpenTrades []AnOpenTrade `json:"open_trades"`
 }
 
+type PO struct{
+	TransID string `json:"transId"`					//the fieldtags are needed to keep case from bouncing around
+	SellerName string `json:"sellerName"`
+	BuyerName string `json:"buyerName"`					//the fieldtags are needed to keep case from bouncing around
+	ExpectedDeliveryDate string `json:"expectedDeliveryDate"`
+	PO_status string `json:"po_status"`
+	PO_date string `json:"po_date"`
+	ItemID string `json:"item_id"`
+	Item_name string `json:"item_name"`
+	Item_quantity int `json:"item_quantity"`
+}
+
+
 // ============================================================================================================================
 // Main
 // ============================================================================================================================
@@ -147,6 +160,8 @@ func (t *SimpleChaincode) Invoke(stub shim.ChaincodeStubInterface, function stri
 		return res, err
 	} else if function == "remove_trade" {									//cancel an open trade order
 		return t.remove_trade(stub, args)
+	} else if function == "create_po" {											//writes a value to the chaincode state
+		return t.create_po(stub, args)
 	}
 	fmt.Println("invoke did not find func: " + function)					//error
 
@@ -651,3 +666,101 @@ func cleanTrades(stub shim.ChaincodeStubInterface)(err error){
 	fmt.Println("- end clean trades")
 	return nil
 }
+
+func (t *ManagePO) create_po(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+	var err error
+	//var po PO
+	//   0       1       2     3
+	// "asdf", "blue", "35", "bob"
+	if len(args) != 9 {
+		return nil, errors.New("Incorrect number of arguments. Expecting 9")
+	}
+	//input sanitation
+	fmt.Println("- start create_po")
+	if len(args[0]) <= 0 {
+		return nil, errors.New("1st argument must be a non-empty string")
+	}
+	if len(args[1]) <= 0 {
+		return nil, errors.New("2nd argument must be a non-empty string")
+	}
+	if len(args[2]) <= 0 {
+		return nil, errors.New("3rd argument must be a non-empty string")
+	}
+	if len(args[3]) <= 0 {
+		return nil, errors.New("4th argument must be a non-empty string")
+	}
+	if len(args[4]) <= 0 {
+		return nil, errors.New("5th argument must be a non-empty string")
+	}
+	if len(args[5]) <= 0 {
+		return nil, errors.New("6th argument must be a non-empty string")
+	}
+	if len(args[6]) <= 0 {
+		return nil, errors.New("7th argument must be a non-empty string")
+	}
+	if len(args[7]) <= 0 {
+		return nil, errors.New("8th argument must be a non-empty string")
+	}
+	if len(args[8]) <= 0 {
+		return nil, errors.New("9th argument must be a non-empty string")
+	}
+	transId := args[0]
+	sellerName := args[1]
+	buyerName := args[2]
+	expectedDeliveryDate := args[3]
+	po_status := args[4]
+	po_date := args[5]
+	item_id := args[6]
+	item_name := args[7]
+	item_quantity, err := strconv.Atoi(args[8])
+	if err != nil {
+		return nil, errors.New("Expecting integer value for asset holding")
+	}
+	
+	poAsBytes, err := stub.GetState(transId)
+	if err != nil {
+		return nil, errors.New("Failed to get PO transID")
+	}
+	res := PO{}
+	json.Unmarshal(poAsBytes, &res)
+	if res.TransID == transId{
+		fmt.Println("This PO arleady exists: " + transId)
+		fmt.Println(res);
+		return nil, errors.New("This PO arleady exists")				//all stop a marble by this name exists
+	}
+	
+	//build the PO json string manually
+	order := 	`{`+
+			`"transId": "` + transId + `" , `+
+			`"sellerName": "` + sellerName + `" , `+
+			`"buyerName": "` + buyerName + `" , `+
+			`"ExpectedDeliveryDate": "` + expectedDeliveryDate + `" , `+ 
+			`"PO_status": "` + po_status + `" , `+ 
+			`"PO_date": "` + po_date + `" , `+ 
+			`"id": "` + item_id + `" , `+ 
+			`"name": "` + item_name + `" , `+ 
+			`"quantity": "` +  strconv.Itoa(item_quantity) + `" `+ 
+			`}`
+	err = stub.PutState(transId, []byte(order))									//store PO with id as key
+	if err != nil {
+		return nil, err
+	}
+		
+	//get the PO index
+	poIndexAsBytes, err := stub.GetState(POIndexStr)
+	if err != nil {
+		return nil, errors.New("Failed to get PO index")
+	}
+	var poIndex []string
+	json.Unmarshal(poIndexAsBytes, &poIndex)							//un stringify it aka JSON.parse()
+	
+	//append
+	poIndex = append(poIndex, transId)									//add PO transID to index list
+	fmt.Println("! PO index: ", poIndex)
+	jsonAsBytes, _ := json.Marshal(poIndex)
+	err = stub.PutState(POIndexStr, jsonAsBytes)						//store name of PO
+
+	fmt.Println("- end create PO")
+	return nil, nil
+}
+
