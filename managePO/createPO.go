@@ -667,7 +667,7 @@ func cleanTrades(stub shim.ChaincodeStubInterface)(err error){
 	return nil
 }
 
-func (t *ManagePO) create_po(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
+func (t *SimpleChaincode) create_po(stub shim.ChaincodeStubInterface, args []string) ([]byte, error) {
 	var err error
 	//var po PO
 	//   0       1       2     3
