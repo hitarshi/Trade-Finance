@@ -68,11 +68,14 @@ type PO struct{
 	ExpectedDeliveryDate string `json:"expectedDeliveryDate"`
 	PO_status string `json:"po_status"`
 	PO_date string `json:"po_date"`
-	ItemID string `json:"item_id"`
-	Item_name string `json:"item_name"`
-	Item_quantity int `json:"item_quantity"`
+	ItemList [] Item 'json:item_list"'
 }
 
+type Item struct{
+	ID string `json:"id"`					//the fieldtags are needed to keep case from bouncing around
+	Name string `json:"name"`
+	Quantity int `json:"quantity"`
+}
 
 // ============================================================================================================================
 // Main
@@ -696,21 +699,16 @@ func (t *SimpleChaincode) create_po(stub shim.ChaincodeStubInterface, args []str
 	if len(args[5]) <= 0 {
 		return nil, errors.New("6th argument must be a non-empty string")
 	}
-	if len(args[6]) <= 0 {
-		return nil, errors.New("7th argument must be a non-empty string")
-	}
-	if len(args[7]) <= 0 {
-		return nil, errors.New("8th argument must be a non-empty string")
-	}
-	if len(args[8]) <= 0 {
-		return nil, errors.New("9th argument must be a non-empty string")
-	}
+	
 	transId := args[0]
 	sellerName := args[1]
 	buyerName := args[2]
 	expectedDeliveryDate := args[3]
 	po_status := args[4]
 	po_date := args[5]
+	
+	string[]
+	
 	item_id := args[6]
 	item_name := args[7]
 	item_quantity, err := strconv.Atoi(args[8])
